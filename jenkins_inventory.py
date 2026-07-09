@@ -73,6 +73,38 @@ def _log(message: str) -> None:
     print(message, file=sys.stderr, flush=True)
 
 
+def load_dotenv(path: str = ".env", override: bool = False) -> bool:
+    """Load ``KEY=VALUE`` pairs from a ``.env`` file into ``os.environ``.
+
+    Lines that are blank or start with ``#`` are ignored, as is an optional
+    leading ``export``. Surrounding single or double quotes are stripped. By
+    default, variables already present in the environment are not overwritten.
+
+    Returns ``True`` if the file was found and read, ``False`` otherwise.
+    """
+    if not os.path.isfile(path):
+        return False
+    with open(path, "r", encoding="utf-8") as handle:
+        for raw_line in handle:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[len("export "):].lstrip()
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+                value = value[1:-1]
+            if not key:
+                continue
+            if override or key not in os.environ:
+                os.environ[key] = value
+    return True
+
+
 def resolve_token(org: str, per_org: dict[str, str], global_pat: Optional[str]) -> str:
     """Return the PAT to use for ``org``.
 
@@ -408,6 +440,11 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
         default="jenkins_inventory.csv",
         help="Output CSV path (default: jenkins_inventory.csv).",
     )
+    parser.add_argument(
+        "--env-file",
+        default=".env",
+        help="Path to a .env file to load (default: .env).",
+    )
     return parser.parse_args(argv)
 
 
@@ -430,6 +467,9 @@ def scan_org(
 
 def main(argv: Optional[list[str]] = None) -> int:
     args = parse_args(argv)
+
+    if load_dotenv(args.env_file):
+        _log(f"Loaded environment from {args.env_file}.")
 
     global_pat = os.environ.get("AZDO_PAT")
     try:

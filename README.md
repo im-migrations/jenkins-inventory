@@ -41,6 +41,17 @@ Set environment variables (see `.env.example`):
 - `AZDO_TOKENS` — optional per-org tokens, either `org=pat,org2=pat2` or JSON
   `{"org":"pat"}`. Orgs not listed fall back to `AZDO_PAT`.
 
+The easiest option is to copy `.env.example` to `.env` and fill in the values —
+the script loads `.env` automatically at startup (existing environment
+variables take precedence):
+
+```bash
+cp .env.example .env
+# then edit .env
+```
+
+Alternatively, export the variables directly:
+
 ```bash
 # Windows (PowerShell)
 $env:AZDO_PAT="xxxxxxxx"
@@ -55,22 +66,25 @@ export AZDO_ORGS="contoso,fabrikam"
 
 ```bash
 # Scan orgs from AZDO_ORGS, write jenkins_inventory.csv
-python azure_devops_jenkins_inventory.py
+python jenkins_inventory.py
 
 # Specify orgs explicitly (repeatable)
-python azure_devops_jenkins_inventory.py --org contoso --org fabrikam
+python jenkins_inventory.py --org contoso --org fabrikam
 
 # Only record repos that actually have a match
-python azure_devops_jenkins_inventory.py --matches-only
+python jenkins_inventory.py --matches-only
 
 # Match filename variants (e.g. Jenkinsfile, Jenkinsfile.ci)
-python azure_devops_jenkins_inventory.py --pattern "Jenkinsfile*"
+python jenkins_inventory.py --pattern "Jenkinsfile*"
 
 # Use Code Search (fast) mode with automatic fallback to REST
-python azure_devops_jenkins_inventory.py --fast
+python jenkins_inventory.py --fast
 
 # Custom output path and an org list from a file
-python azure_devops_jenkins_inventory.py --orgs-file orgs.txt -o out.csv
+python jenkins_inventory.py --orgs-file orgs.txt -o out.csv
+
+# Load a specific env file
+python jenkins_inventory.py --env-file prod.env
 ```
 
 ## Output
